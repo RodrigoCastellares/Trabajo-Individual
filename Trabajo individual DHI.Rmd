@@ -1,0 +1,111 @@
+
+[Se omitieron todas las posibles tildes para evitar cualquier inconveniente de traduccion]
+
+Primero, instalamos la libreria para leer la data que encontramos en una pagina web. 
+
+```{r}
+#                                       Instalacion de libreria
+
+install.packages("htmltab")
+library(htmltab) 
+```
+
+Ahora, abrimos la data escogida del 2008, y eliminamos las variables que no nos son pertinentes. Asimismo, cambiamos los nombres de las dos variables restantes a unas mas facil.
+
+```{r}
+#                                       2008
+
+link2008 = "https://datosmacro.expansion.com/idh?anio=2008"
+linkPath_2008='//*[@id="tb1"]'
+Data2008 = htmltab(doc = link2008, 
+                   which =linkPath_2008, encoding="UTF-8")
+View(Data2008)
+Data2008$`Ranking IDH`=NULL
+Data2008$Var.=NULL
+names(Data2008)
+names(Data2008)=c("Pais", "IDH 2008")
+```
+
+Hacemos el mismo procedimiento con la data del 2009
+
+```{r}
+#                                       2009
+
+link2009 = "https://datosmacro.expansion.com/idh?anio=2009"
+linkPath_2009='//*[@id="tb1"]'
+Data2009 = htmltab(doc = link2009, 
+                   which =linkPath_2009, encoding="UTF-8")
+View(Data2009)
+Data2009$`Ranking IDH`=NULL
+Data2009$Var.=NULL
+names(Data2009)
+names(Data2009)=c("Pais", "IDH 2009")
+```
+
+Y ahora tambien con la ultima data, la del 2010
+
+```{r}
+#                                       2010
+
+link2010 = "https://datosmacro.expansion.com/idh?anio=2010"
+linkPath_2010='//*[@id="tb1"]'
+Data2010 = htmltab(doc = link2010, 
+                   which =linkPath_2010, encoding="UTF-8")
+View(Data2010)
+Data2010$`Ranking IDH`=NULL
+Data2010$Var.=NULL
+names(Data2010)
+names(Data2010)=c("Pais", "IDH 2010")
+```
+
+Realizamos el merge entre las dos primeras datas, para luego fusionarla con la restante, con el objetivo de tener una sola data que involucre las tres datas
+
+```{r}
+#                                       MERGE
+
+Data1=merge(Data2008,Data2009)
+View(Data1)
+DataIDH=merge(Data1,Data2010)
+View(DataIDH)
+str(DataIDH)
+```
+
+Seguidamente, realizamos la limpieza y numerizacion pertinentes en las tres variables de IDH. Notamos que la 'coma' no le permite al R interpretar los decimales como numeros, por lo que la cambiamos por un 'punto', para que luego de ello si las vea como decimales. Ademas, se comprobo que no haya N/As.
+
+```{r}
+#                                       Limpieza de IDH
+
+DataIDH$`IDH 2008`=gsub(",",".",DataIDH$`IDH 2008`)
+DataIDH$`IDH 2009`=gsub(",",".",DataIDH$`IDH 2009`)
+DataIDH$`IDH 2010`=gsub(",",".",DataIDH$`IDH 2010`)
+str(DataIDH)
+DataIDH[,-1]=lapply(DataIDH[,-1], as.numeric)
+str(DataIDH)
+DataIDH[!complete.cases(DataIDH),]
+```
+
+Procedemos a limpiar la variable restante, la de Pais. Dado que cada valor tiene '[+]' en su composicion, lo extraeremos para tener mas 'limpios' los nombres de los paises. Las siguientes operaciones fueron necesarias, pues R no reconoce "[+]" como una unidad a extraer.
+
+```{r}
+#                                       Limpieza de Pais  
+
+DataIDH$Pais=gsub("]","",DataIDH$Pais)
+DataIDH$Pais=gsub("[[]","",DataIDH$Pais)
+DataIDH$Pais=gsub("[+]","",DataIDH$Pais)
+```
+
+Finalmente, creaermos una nueva base de datos (Rodrigo) con los paises pertinentes: latinoamericanos. Son dieciocho en total, los cuales seran seleccionados dados los numeros de filas a las que pertenecen. Para concluir, se cambiaran los nombres de los paises mal traducidos por el programas, por tener tildes en su composicion. Se comprueba con el 'str' que todo este en orden, y lo esta: se ha creado una nueva base de datos con el IDH de dieciocho paises latinoamericanos entre los años 2008-2010.
+
+```{r}
+#                                       Creacion de Rodrigo
+
+Rodrigo=DataIDH[c(9,23,26,38,41,45,50,52,73,79,108,126,134,136,137,145,178,181),]
+View(Rodrigo)
+names(Rodrigo)
+Rodrigo[11,1]="Mexico"
+Rodrigo[13,1]="Panama"
+Rodrigo[15,1]="Peru"
+Rodrigo[16,1]="Republica Dominicana"
+str(Rodrigo)
+```
+
